@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Stock Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+        }
+        .stock-info, .news-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .news-section ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .news-section ul li {
+            margin: 5px 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+    </style>
+    <script>
+        async function fetchStockData(stockSymbol) {
+            const stockApiUrl = `https://finnhub.io/api/v1/quote?symbol=${stockSymbol}&token=YOUR_NEW_API_KEY`;
+            const newsApiUrl = `https://finnhub.io/api/v1/company-news?symbol=${stockSymbol}&from=2025-01-01&to=2025-01-16&token=YOUR_NEW_API_KEY`;
+
+            try {
+                const [stockResponse, newsResponse] = await Promise.all([
+                    fetch(stockApiUrl),
+                    fetch(newsApiUrl)
+                ]);
+
+                if (!stockResponse.ok || !newsResponse.ok) {
+                    throw new Error('Error fetching data.');
+                }
+
+                const stockData = await stockResponse.json();
+                const newsData = await newsResponse.json();
+
+                updateStockInfo(stockSymbol, stockData);
+                updateNews(newsData);
+            } catch (error) {
+                console.error(error);
+                alert('Error fetching stock data. Please try again later.');
+            }
+        }
+
+        function updateStockInfo(stockSymbol, data) {
+            const stockInfoDiv = document.getElementById('stock-info');
+            stockInfoDiv.innerHTML = `
+                <h2>Stock: ${stockSymbol}</h2>
+                <p><strong>Current Price:</strong> $${data.c}</p>
+                <p><strong>Open:</strong> $${data.o}</p>
+                <p><strong>High:</strong> $${data.h}</p>
+                <p><strong>Low:</strong> $${data.l}</p>
+                <p><strong>Previous Close:</strong> $${data.pc}</p>
+            `;
+        }
+
+        function updateNews(newsData) {
+            const newsSection = document.getElementById('news-section');
+            newsSection.innerHTML = '<h2>Latest News</h2><ul>';
+
+            newsData.forEach(news => {
+                newsSection.innerHTML += `
+                    <li>
+                        <a href="${news.url}" target="_blank">${news.headline}</a>
+                        <p>${news.summary}</p>
+                    </li>
+                `;
+            });
+
+            newsSection.innerHTML += '</ul>';
+        }
+
+        function searchStock() {
+            const stockSymbol = document.getElementById('stock-symbol').value.toUpperCase();
+            if (stockSymbol) {
+                fetchStockData(stockSymbol);
+            } else {
+                alert('Please enter a valid stock symbol.');
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Real-Time Stock Data</h1>
+    </header>
+    <div class="container">
+        <div class="stock-search">
+            <input type="text" id="stock-symbol" placeholder="Enter stock symbol (e.g., AAPL, TSLA)">
+            <button onclick="searchStock()">Search</button>
+        </div>
+        <div class="stock-info" id="stock-info">
+            <h2>Stock Information</h2>
+            <p>Enter a stock symbol to view details.</p>
+        </div>
+        <div class="news-section" id="news-section">
+            <h2>Latest News</h2>
+            <p>Enter a stock symbol to view news.</p>
+        </div>
+    </div>
+</body>
+</html>
